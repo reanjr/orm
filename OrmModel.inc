@@ -16,30 +16,50 @@ abstract class OrmModel
     
     /**
      * If values are provided, set the property values for the corresponding fields of the primary key.  Otherwise,
-     * set new to true.  Compound primary keys can be set by passing additional values.
+     * set new to true.  Compound primary keys can be set by passing extra arguments.
      * 
      * @param   int|string|bool     $primaryKey_1
      */
     public function __construct( $primaryKey_1 )
     {
-        // get the list of PK values from the arguments
-        $args = func_get_args();
+        $keyNames = $this->getPrimaryKey();
+        $keyValues = func_get_args();
         
         // this instance is materialized to the data store if a PK was provided
-        $this->materialized = (bool)$args;
+        $this->materialized = (bool)$keyValues;
         
         // ensure the number of provided key values matches the number of values in the PK
-        if( $args && count($args) != count($this->getPrimaryKey()) )
+        if( count($keyValues) != count($keyNames) )
         {
             throw new Exception( Orm::ERROR_INVALID_PRIMARY_KEY );
         }
         
         // set PK properties
-        $keyValues = array_combine( $this->getPrimaryKey(), $args );
+        $keyValues = array_combine( $keyNames, $keyValues );
         foreach( $keyValues as $field => $value )
         {
             $this->properties[$field] = $value;
         }
+    }
+    
+    /**
+     * Create a new instance, hydrate it from the data store based on the provided primary key values, and return the
+     * instance.  Compound primary keys can be looked up by passing extra arguments.
+     * 
+     * @param   int|string|bool     $primaryKey_1
+     */
+    public static function getByPrimaryKey( $primaryKey_1 )
+    {
+        $keyNames = $this->getPrimaryKey();
+        $keyValues = func_get_args();
+        
+        // ensure the number of provided key values matches the number of values in the PK
+        if( count($keyValues) != count($keyNames) )
+        {
+            throw new Exception( Orm::ERROR_INVALID_PRIMARY_KEY );
+        }
+        
+        // set PK properties
     }
     
     /**
@@ -149,6 +169,7 @@ abstract class OrmModel
      * save method so the model is written to the data store and assigns the appropriate values before attempting to
      * read the value.
      * 
+     * @param   string  $name
      * @return  mixed
      */
     public function __get( $name )
@@ -161,7 +182,17 @@ abstract class OrmModel
     
     /**
      * Call the appropriate setter for the given property.  Throw an exception if attempting to change a primary key
-     * value on a materialized model.
+     * value on a materialized model.  If the property does not exist, silently fail.
+     * 
+     * @param   string  $name
+     * @param   mixed   $value
      */
+    public function __set( $name, $value )
+    {
+        $methodName = 'set' . ucfirst( $name );
+        return method_exists( $this, $methodName )
+          ? $this->$methodName( $value )
+          : null;
+    }
     
 }
