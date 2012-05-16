@@ -15,8 +15,9 @@ abstract class OrmModel
     private $modified = array();
     
     /**
-     * If values are provided, set the property values for the corresponding fields of the primary key.  Otherwise,
-     * set new to true.  Compound primary keys can be set by passing extra arguments.
+     * If values are provided, set the property values for the corresponding fields of the primary key and set
+     * materialized to true.  Otherwise, set materialized to false.  Compound primary keys can be set by passing extra
+     * arguments.
      * 
      * @param   int|string|bool     $primaryKey_1
      */
@@ -36,10 +37,7 @@ abstract class OrmModel
         
         // set PK properties
         $keyValues = array_combine( $keyNames, $keyValues );
-        foreach( $keyValues as $field => $value )
-        {
-            $this->properties[$field] = $value;
-        }
+        $this->properties = array_merge( $this->properties, $keyValues );
     }
     
     /**
@@ -47,19 +45,19 @@ abstract class OrmModel
      * instance.  Compound primary keys can be looked up by passing extra arguments.
      * 
      * @param   int|string|bool     $primaryKey_1
+     * @return  OrmModel
      */
     public static function getByPrimaryKey( $primaryKey_1 )
     {
-        $keyNames = $this->getPrimaryKey();
-        $keyValues = func_get_args();
+        $key = func_get_args();
         
-        // ensure the number of provided key values matches the number of values in the PK
-        if( count($keyValues) != count($keyNames) )
-        {
-            throw new Exception( Orm::ERROR_INVALID_PRIMARY_KEY );
-        }
+        // call constructor with key values as arguments and hydrate the object
+        $ref = new ReflectionClass( get_called_class() );
+        $instance = $ref->newInstanceArgs( $key );
+        $instance->hydrate();
         
-        // set PK properties
+        // return the hydrated instance
+        return $instance;
     }
     
     /**
@@ -193,6 +191,31 @@ abstract class OrmModel
         return method_exists( $this, $methodName )
           ? $this->$methodName( $value )
           : null;
+    }
+    
+    /**
+     * Using the current primary key values for this instance, look up this model's properties in the data store and
+     * hydrate it with the resulting data.  Set all fields to unmodified.  If the record can not be found in the data
+     * store, throw an exception.
+     */
+    public function refresh()
+    {
+        
+        // clear flags tracking modified fields
+        $this->modified = array();
+    }
+    
+    /**
+     * Refresh the data with the provided name / value pairs and set the instance to hydrated.
+     * 
+     * @param   array   $properties
+     */
+    protected function hydrate( array $properties )
+    {
+        foreach( $properties as $name => $value )
+        {
+            $this->$name = $value;
+        }
     }
     
 }
