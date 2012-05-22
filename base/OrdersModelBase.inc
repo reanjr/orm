@@ -21,12 +21,24 @@ class OrdersModelBase extends OrmModel
         return 'orders';
     }
     
-    public function getPrimaryKey() {
+    public function getPrimaryKey()
+    {
         return array( 'id' );
     }
     
-    public function getUniqueKeys() {
+    public function getUniqueKeys()
+    {
         return array();
     }
 
+    public function getOrderLineItemId()
+    {
+        
+    }
+    
+    public function getOrderLineItemList()
+    {
+        
+    }
+    
 }
