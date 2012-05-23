@@ -28,15 +28,17 @@ class Orm
     {
         foreach( $schematic->getRelations() as $relation )
         {
-            // this will be the user class name; an additional base class will also be created
-            $modelName = ucfirst( self::formatLogicalName( $relation ) );
+            // generate model class names from the relation name
+            $className = ucfirst( self::formatLogicalName( $relation ) ) . "Model";
+            $baseClassName = $className . "Base";
 
-            // determine what properties the class needs
-            $modelProperties = array();
+            // determine what properties the class needs from the relation attributes
+            $properties = array();
             foreach( $schematic->getRelationAttributes( $relation ) as $attribute )
             {
+                $propertyName = self::formatLogicalName( $attribute );
                 $type = $schematic->getRelationAttributeType( $relation, $attribute );
-                
+                $properties[$propertyName] = $type;
             }
         }
     }
