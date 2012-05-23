@@ -21,12 +21,24 @@ class Orm
      *      "user_path": "models/orm"
      * }
      * 
-     * @param   Db      $db
-     * @param   array   $config
+     * @param   ISchematic      $schematic
+     * @param   array           $config
      */
-    public static function generateModels( Db $db, array $config )
+    public static function generateModels( ISchematic $schematic, array $config )
     {
-        
+        foreach( $schematic->getRelations() as $relation )
+        {
+            // this will be the user class name; an additional base class will also be created
+            $modelName = ucfirst( self::formatLogicalName( $relation ) );
+
+            // determine what properties the class needs
+            $modelProperties = array();
+            foreach( $schematic->getRelationAttributes( $relation ) as $attribute )
+            {
+                $type = $schematic->getRelationAttributeType( $relation, $attribute );
+                
+            }
+        }
     }
     
     /**
@@ -73,7 +85,7 @@ class Orm
      * @param   string  $name
      * @return  string 
      */
-    public function formatLogicalName( $name )
+    public static function formatLogicalName( $name )
     {
         // if there's an underscore in the name, assume it's in physical name
         if( preg_match( '@_@', $name ) )
@@ -99,7 +111,7 @@ class Orm
      * @param   string  $name
      * @return  string
      */
-    public function formatFriendlyName( $name )
+    public static function formatFriendlyName( $name )
     {
         // if there's an underscore in the name, assume it's in physical name
         if( preg_match( '@_@', $name ) )
