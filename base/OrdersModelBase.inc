@@ -6,9 +6,9 @@
 class OrdersModelBase extends OrmModel
 {
     
-    public function getApplication()
+    public function getConnection()
     {
-        return Orm::APP_WEBSITE;
+        return SkinitOrm::APP_WEBSITE;
     }
     
     public function getSchema()
@@ -16,7 +16,7 @@ class OrdersModelBase extends OrmModel
         return 'web';
     }
     
-    public function getTable()
+    public function getRelation()
     {
         return 'orders';
     }

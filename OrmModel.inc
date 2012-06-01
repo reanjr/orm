@@ -61,11 +61,11 @@ abstract class OrmModel
     }
     
     /**
-     * Return the application for the model.  This should be one of the Orm::APP_* constants.
+     * Return the connection name for this model's data store.
      * 
      * @return  string
      */
-    abstract public function getApplication();
+    abstract public function getConnection();
     
     /**
      * Return the schema name for this model's data store. 
@@ -75,11 +75,11 @@ abstract class OrmModel
     abstract public function getSchema();
     
     /**
-     * Return the table name for this model's data store.
+     * Return the relation name for this model's data store.
      * 
      * @return  string
      */
-    abstract public function getTable();
+    abstract public function getRelation();
     
     /**
      * Return the keys for the model.  This includes the primary key and any additional unique keys.  Each key is a
