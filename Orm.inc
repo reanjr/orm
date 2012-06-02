@@ -33,9 +33,11 @@ class Orm
             foreach( $schematic->getRelationAttributes( $relation ) as $attribute )
             {
                 $propertyName = self::formatLogicalName( $attribute );
-                $type = $schematic->getRelationAttributeType( $relation, $attribute );
+                $dataType = $schematic->getRelationAttributeType( $relation, $attribute );
                 $properties[$propertyName] = $type;
             }
+
+            // 
         }
     }
     
