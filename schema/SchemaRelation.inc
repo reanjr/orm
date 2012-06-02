@@ -10,11 +10,34 @@ class SchemaRelation
 
     /**
      * Set the schema and name for this relation.
+     *
+     * @param   ISchematic  $schema
+     * @param   string      $name
      */
     public function __construct( ISchematic $schema, $name )
     {
         $this->schema = $schema;
         $this->name = (string)$name;
+    }
+
+    /**
+     * Return the schema in which this relation is found.
+     *
+     * @return  ISchematic
+     */
+    public function getSchema()
+    {
+        return $this->schema;
+    }
+
+    /**
+     * Return the name of this relation.
+     *
+     * @return  string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
     
 }
