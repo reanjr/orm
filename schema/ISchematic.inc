@@ -26,7 +26,7 @@ interface ISchematic
     function getRelations();
 
     /**
-     * Return a list of attributes (columns in SQL) for the provided relat(ion as an array of SchemaAttribute
+     * Return a list of attributes (columns in SQL) for the provided relation as an array of SchemaAttribute
      * instances.
      *
      * @param   string  $relationName
@@ -35,11 +35,12 @@ interface ISchematic
     function getRelationAttributes( $relationName );
 
     /**
-     * Return an array of relationships (foreign key constraints in SQL) for the provided relation.  Each relationship
-     * is
+     * Return a list of relationships (foreign key constraints in SQL) for the provided relation as array of
+     * SchemaRelation instances.
      *
-     * @param   string  $relation
-     * @return  
+     * @param   string  $relationName
+     * @return  array
      */
+    function getRelationships( $relationName );
     
 }
