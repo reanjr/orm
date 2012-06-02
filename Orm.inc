@@ -22,19 +22,22 @@ class Orm
      */
     public static function generateModels( ISchematic $schematic, array $config )
     {
+        $models = array();
         foreach( $schematic->getRelations() as $relation )
         {
+            // create a new model builder for this relation and add it to the models list
+            $model = new OrmModelBuilder();
+
             // generate model class names from the relation name
             $className = ucfirst( self::formatLogicalName( $relation ) ) . "Model";
             $baseClassName = $className . "Base";
 
-            // determine what properties the class needs from the relation attributes
-            $properties = array();
-            foreach( $schematic->getRelationAttributes( $relation ) as $attribute )
+            // add properties to the model builder based for the relation attributes
+            foreach( $relation->getAttributes() as $attribute )
             {
                 $propertyName = self::formatLogicalName( $attribute );
-                $dataType = $schematic->getRelationAttributeType( $relation, $attribute );
-                $properties[$propertyName] = $type;
+                $dataType = $attribute->getDataType();
+                $model->addProperty( $propertyName, $dataType );
             }
 
             // 

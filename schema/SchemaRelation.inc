@@ -39,5 +39,15 @@ class SchemaRelation
     {
         return $this->name;
     }
+
+    /**
+     * Format this relation as a string.
+     *
+     * @return  string
+     */
+    public function __toString()
+    {
+        return $this->getName();
+    }
     
 }

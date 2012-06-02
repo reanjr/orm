@@ -74,4 +74,14 @@ class SchemaAttribute
         return $this->dataType;
     }
     
+    /**
+     * Format this attribute as a string.
+     *
+     * @return  string
+     */
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
 }
