@@ -21,7 +21,8 @@ class SchemaKey
             throw new Exception( "SchemaKey must have at least one attribute" );
         }
 
-        // now validate any remaining attributes against the first.
+        // now validate any remaining attributes against the first and add them to the key
+        $this->attributes[] = $firstAttribute;
         foreach( $attributes as $attribute )
         {
             $schemasMatch = (bool)$attribute->getSchema()->getName() == $firstAttribute->getSchema()->getName();
@@ -30,6 +31,7 @@ class SchemaKey
             {
                 throw new Exception( "attributes must all have the same schema and relation" );
             }
+            $this->attributes[] = $attribute;
         }
     }
 
@@ -61,6 +63,16 @@ class SchemaKey
     public function getSize()
     {
         return count($this->getAttributes());
+    }
+
+    /**
+     * Return the relation on which the key attributes are defined.
+     *
+     * @return  SchemaRelation
+     */
+    public function getRelation()
+    {
+        return $this->attributes[0]->getRelation();
     }
     
 }

@@ -25,6 +25,8 @@ class Orm
         $models = array();
         foreach( $schematic->getRelations() as $relation )
         {
+            /* @var $relation SchemaRelation */
+
             // create a new model builder for this relation and add it to the models list
             $model = new OrmModelBuilder();
 
@@ -32,7 +34,7 @@ class Orm
             $className = ucfirst( self::formatLogicalName( $relation ) ) . "Model";
             $baseClassName = $className . "Base";
 
-            // add properties to the model builder based for the relation attributes
+            // add properties to the model builder for each of the relation attributes
             foreach( $relation->getAttributes() as $attribute )
             {
                 $propertyName = self::formatLogicalName( $attribute );
@@ -40,7 +42,11 @@ class Orm
                 $model->addProperty( $propertyName, $dataType );
             }
 
-            // 
+            // add methods for related models
+            foreach( $relation->getRelationships() as $relationship )
+            {
+                
+            }
         }
     }
     
