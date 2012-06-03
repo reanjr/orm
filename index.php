@@ -3,4 +3,4 @@
  * Copyright Skinit, Inc.
  */
 
-$catalog = new MysqlOrmDriver();
+$catalog = new MysqlDataStore();
