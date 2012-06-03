@@ -192,7 +192,18 @@ abstract class OrmModel
           ? $this->$methodName( $value )
           : null;
     }
-    
+
+    /**
+     * Return the value of the specified property.
+     *
+     * @param   string  $propertyName
+     * @return  mixed
+     */
+    protected function getProperty( $propertyName )
+    {
+        
+    }
+
     /**
      * Using the current primary key values for this instance, look up this model's properties in the data store and
      * hydrate it with the resulting data.  Set all fields to unmodified.  If the record can not be found in the data

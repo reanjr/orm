@@ -22,11 +22,12 @@ class Orm
      */
     public static function generateModels( ISchematic $schematic, array $config )
     {
+        /* @var $relation SchemaRelation */
+        /* @var $relationship SchemaRelationship */
+
         $models = array();
         foreach( $schematic->getRelations() as $relation )
         {
-            /* @var $relation SchemaRelation */
-
             // create a new model builder for this relation and add it to the models list
             $model = new OrmModelBuilder();
 
@@ -42,10 +43,21 @@ class Orm
                 $model->addProperty( $propertyName, $dataType );
             }
 
-            // add methods for related models
+            // add properties for related models
             foreach( $relation->getRelationships() as $relationship )
             {
-                
+                // start with the name of the first attribute in the from key
+                $fromAttribute = array_shift( $relationship->getFromAttributes() );
+                $from = self::formatPhysicalName( $fromAttribute );
+
+                // grab the name of the corresponding attribute in the to key
+                $toAttribute = array_shift( $relationship->getToAttributes() );
+                $to = self::formatPhysicalName( $toAttribute );
+
+                // add new property by stripping "to" from end of "from"; ex: id, parent_id -> parent
+                $propertyName = preg_replace( '@_' . $to . '^@', '', $from );
+                $dataType = ucfirst( self::formatLogicalName( $relationship->getToRelation() ) ) . "Model";
+                $model->addProperty( $propertyName, $dataType );
             }
         }
     }

@@ -3,7 +3,7 @@
  * Copyright Skinit, Inc.
  */
 
-class MysqlOrmDriver implements ISchematic
+class MysqlDataStore extends OrmDataStore implements ISchematic
 {
     const BIG_INTEGER = 'bigint';
     const BINARY_LARGE_OBJECT = 'blob';
@@ -26,6 +26,8 @@ class MysqlOrmDriver implements ISchematic
     
 
     protected $connection = null;
+
+    
 
     public function getRelations()
     {
