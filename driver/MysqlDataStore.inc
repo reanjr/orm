@@ -26,21 +26,58 @@ class MysqlDataStore extends OrmDataStore implements ISchematic
     
 
     protected $connection = null;
+    protected $connectionParams = array();
 
+    /**
+     * Set the connection parameters for the MySQL DB.
+     * 
+     * @param   string  $host
+     * @param   string  $user
+     * @param   string  $password
+     * @param   string  $schema
+     * @param   int     $port 
+     */
+    public function __construct( $host = 'localhost', $user = 'root', $password = null, $schema = 'information_schema',
+            $port = 3306 )
+    {
+        $this->connectionParams = array(
+            'host' => $host,
+            'user' => $user,
+            'password' => $password,
+            'schema' => $schema,
+            'port' => $port,
+        );
+    }
     
+    /**
+     * Connect to the MySQL server. 
+     */
+    public function connect()
+    {
+        // get the connection params for this data store
+        $host = $this->connectionParams['host'];
+        $user = $this->connectionParams['user'];
+        $password = $this->connectionParams['password'];
+        $schema = $this->connectionParams['schema'];
+        $port = $this->connectionParams['port'];
+        
+        // connect to the MySQL server
+        $this->connection = new mysqli( $host, $user, $password, $schema, $port );
+    }
 
+    public function getName()
+    {
+        return $this->connectionParams['schema'];
+    }
+    
     public function getRelations()
     {
         "select table_name from information_schema.tables";
     }
 
-    public function getRelationAttributes( $relation )
+    public function getRelationAttributes( $relationName )
     {
         "select column_name from information_schema.columns where table_name = ?";
-    }
-
-    public function getRelationAttributeType( $relation, $attribute )
-    {
         "select data_type from information_schema.columns where table_name = ? and column_name = ?";
 
         switch( $dataType )
@@ -68,4 +105,11 @@ class MysqlDataStore extends OrmDataStore implements ISchematic
                 return ISchematic::TYPE_NUMBER;
         }
     }
+    
+    public function getRelationships( $relationName )
+    {
+        "select referenced_table_name, column_name, referenced_column_name, ordinal_position";
+        "from information_schema.key_column_usage where table_name = ?";
+    }
+    
 }
