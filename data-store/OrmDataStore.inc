@@ -11,8 +11,4 @@ abstract class OrmDataStore
      */
     abstract public function connect();
 
-    /**
-     * 
-     */
-
 }
