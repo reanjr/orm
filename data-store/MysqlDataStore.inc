@@ -3,7 +3,7 @@
  * Copyright Skinit, Inc.
  */
 
-class MysqlDataStore extends OrmDataStore implements ISchematic
+class MysqlDataStore extends SqlDataStore
 {
     const BIG_INTEGER = 'bigint';
     const BINARY_LARGE_OBJECT = 'blob';
@@ -24,7 +24,7 @@ class MysqlDataStore extends OrmDataStore implements ISchematic
     const TINY_INTEGER = 'tinyint';
     const VARIABLE_CHARACTER = 'varchar';
     
-
+    /** @var mysqli $connection */
     protected $connection = null;
     protected $connectionParams = array();
 
@@ -48,10 +48,12 @@ class MysqlDataStore extends OrmDataStore implements ISchematic
             'port' => $port,
         );
     }
+
     
-    /**
-     * Connect to the MySQL server. 
-     */
+    /**************************************************************************
+     * SqlDataStore implementation 
+     **************************************************************************/
+
     public function connect()
     {
         // get the connection params for this data store
@@ -69,18 +71,10 @@ class MysqlDataStore extends OrmDataStore implements ISchematic
     {
         return $this->connectionParams['schema'];
     }
-    
-    public function getRelations()
-    {
-        "select table_name from information_schema.tables";
-    }
 
-    public function getRelationAttributes( $relationName )
+    protected function mapDataType( $sqlType )
     {
-        "select column_name from information_schema.columns where table_name = ?";
-        "select data_type from information_schema.columns where table_name = ? and column_name = ?";
-
-        switch( $dataType )
+        switch( $sqlType )
         {
             case self::BIG_INTEGER:
             case self::INTEGER:
@@ -106,10 +100,20 @@ class MysqlDataStore extends OrmDataStore implements ISchematic
         }
     }
     
-    public function getRelationships( $relationName )
+    protected function query( $query, $values = array() )
     {
-        "select referenced_table_name, column_name, referenced_column_name, ordinal_position";
-        "from information_schema.key_column_usage where table_name = ?";
+        // create a statement and bind params
+        $statement = $this->connection->stmt_init();
+        $statement->prepare( $query );
+        array_walk( $values, function($value) use($statement) {
+            $typeCode = is_int( $value ) ? 'i' : null;
+            $typeCode = $typeCode ?: is_float( $value ) ? 'd' : 's';
+            $statement->bind_param( $typeCode, $value );
+        } );
+
+        // execute the statement and return an iterator for the results
+        $statement->execute();
+        return $statement->get_result();
     }
-    
+
 }
