@@ -111,6 +111,16 @@ class ModelBuilder
     }
     
     /**
+     * Return the classes associated with this instance.
+     * 
+     * @return  array 
+     */
+    public function getClasses()
+    {
+        return array_values( $this->classes );
+    }
+    
+    /**
      * Add a new property.  The data type should be on of the ISchematic::TYPE_* constants or a model class name.  If a
      * property with the specified name already exists, do nothing.
      * 

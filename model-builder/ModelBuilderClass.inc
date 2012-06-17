@@ -20,7 +20,7 @@ class ModelBuilderClass
     /**
      * Return the name of this class.
      * 
-     * @return  string 
+     * @return  string
      */
     public function getName()
     {
@@ -63,6 +63,22 @@ class ModelBuilderClass
     public function __toString()
     {
         return $this->getName();
+    }
+    
+    /**
+     * Generate PHP code for this class and return it.
+     * 
+     * @return  string 
+     */
+    public function getCode()
+    {
+        $name = $this->getName();
+        $code = <<<CODE
+abstract class $name extends OrmModel
+{
+}
+CODE;
+        return $code;
     }
     
 }
