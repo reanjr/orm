@@ -39,6 +39,16 @@ class SchemaRelation
     {
         return $this->name;
     }
+    
+    /**
+     * Return the attributes defined on this relation.
+     * 
+     * @return  array 
+     */
+    public function getAttributes()
+    {
+        return $this->getSchema()->getRelationAttributes( $this->getName() );
+    }
 
     /**
      * Return the relationships defined on this relation.
