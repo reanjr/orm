@@ -18,8 +18,12 @@ class OrmModelBuilder
     }
 
     /**
-     * Add a new property.  The data type should be on of the ISchematic::TYPE_* constants.  If a property with the
-     * specified name already exists, do nothing.
+     * Build a model for the provided relation. 
+     */
+    
+    /**
+     * Add a new property.  The data type should be on of the ISchematic::TYPE_* constants or a model class name.  If a
+     * property with the specified name already exists, do nothing.
      * 
      * @param   string  $name
      * @param   string  $dataType
