@@ -93,6 +93,16 @@ class ModelBuilderClass
     }
     
     /**
+     * Return a list of properties associated with this instance.
+     * 
+     * @return  array 
+     */
+    public function getProperties()
+    {
+        return $this->properties;
+    }
+    
+    /**
      * Render this class as a string.
      * 
      * @return  string
@@ -119,13 +129,33 @@ class ModelBuilderClass
         $implementsString = $this->implement
           ? "implements " . implode( ", ", $this->implement ) . " "
           : "";
+        $propertiesString = $this->getPropertiesCode();
         
         $code = <<<CODE
+<?php
 {$descriptorString}class $name $extendsString$implementsString
 {
+$propertiesString
 }
 CODE;
         return $code;
+    }
+    
+    /**
+     * Genreate PHP code detailing this class's properties and return it
+     * 
+     * @return  string
+     */
+    protected function getPropertiesCode()
+    {
+        $propertiesStrings = array_map( function(ModelBuilderProperty $property) {
+            $dataType = $property->getDataType();
+            $name = $property->getName();
+            return "    /** @var $dataType \$$name */\n" .
+                   "    protected \$$name = null;\n";
+        }, $this->getProperties() );
+        
+        return implode( "\n", $propertiesStrings );
     }
     
 }
