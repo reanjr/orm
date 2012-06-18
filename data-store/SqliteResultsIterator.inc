@@ -31,13 +31,14 @@ class SqliteResultsIterator implements Iterator
     
     public function next()
     {
-        $this->currentResult = $this->results->fetchArray();
+        $this->currentResult = $this->results->fetchArray( SQLITE3_ASSOC );
         $this->index++;
     }
     
     public function rewind()
     {
-        // no op
+        // this may only be called once; this is typically done by a foreach
+        $this->next();
     }
     
     public function valid()

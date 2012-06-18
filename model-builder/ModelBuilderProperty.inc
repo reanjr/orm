@@ -40,4 +40,14 @@ class ModelBuilderProperty
         return $this->dataType;
     }
 
+    /**
+     * Render this property as a string.
+     * 
+     * @return  string
+     */
+    public function __toString()
+    {
+        return $this->getName();
+    }
+    
 }

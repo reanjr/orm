@@ -41,9 +41,6 @@ class ModelBuilder
         {
             $this->addAttribute( $attribute, $className );
         }
-        array_walk( $relation->getAttributes(), function($attribute) use($class) {
-            
-        } );
     }
     
     /**

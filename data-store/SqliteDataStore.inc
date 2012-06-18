@@ -61,8 +61,8 @@ class SqliteDataStore extends SqlDataStore
         } );
         
         // execute the statement and return an iterator for the results
-        $result = $statement->execute();
-        return $result;
+        $results = $statement->execute();
+        return new SqliteResultsIterator( $results );
     }
     
     
@@ -87,10 +87,10 @@ class SqliteDataStore extends SqlDataStore
     public function getRelationAttributes( $relationName )
     {
         // grab the columns and types and build SchemaAttribute instances describing the columns
-        $query = "pragma table_info(?)";
-        $values = array( $relationName );
+        $tableName = str_replace( '"', '""', $relationName );
+        $query = "pragma table_info(\"$tableName\")";
         $results = array();
-        foreach( $this->query( $query, $values ) as $record )
+        foreach( $this->query( $query ) as $record )
         {
             $name = $record['name'];
             $dataType = $this->mapDataType( $record['type'] );

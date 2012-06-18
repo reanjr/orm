@@ -90,7 +90,7 @@ class Orm
         }
         
         // otherwise, assume it's already in logical format
-        return $name;
+        return (string)$name;
     }
     
     /**

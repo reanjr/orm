@@ -6,6 +6,7 @@
 class ModelBuilderClass
 {
     protected $name = null;
+    protected $properties = array();
     
     /**
      * Set the name of the class.
