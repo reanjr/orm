@@ -32,7 +32,7 @@ abstract class SqlDataStore extends OrmDataStore implements ISchematic
      * @param   array       $values
      * @return  array 
      */
-    private function queryOne( $query, $values = array() )
+    protected function queryOne( $query, $values = array() )
     {
         foreach( $this->query( $query, $values ) as $record )
         {
@@ -47,7 +47,7 @@ abstract class SqlDataStore extends OrmDataStore implements ISchematic
      * @param   array           $values
      * @return  string|bool|int
      */
-    private function queryScalar( $query, $values )
+    protected function queryScalar( $query, $values )
     {
         $record = $this->queryOne( $query, $values );
         return array_shift( $record );
@@ -60,7 +60,7 @@ abstract class SqlDataStore extends OrmDataStore implements ISchematic
      * @param   array       $values
      * @return  array 
      */
-    private function queryColumn( $query, $values )
+    protected function queryColumn( $query, $values = array() )
     {
         $result = array();
         foreach( $this->query( $query, $values ) as $record )

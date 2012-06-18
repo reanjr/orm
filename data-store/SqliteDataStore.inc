@@ -61,7 +61,8 @@ class SqliteDataStore extends SqlDataStore
         } );
         
         // execute the statement and return an iterator for the results
-        return $statement->execute();
+        $result = $statement->execute();
+        return $result;
     }
     
     
@@ -72,7 +73,7 @@ class SqliteDataStore extends SqlDataStore
     public function getRelations()
     {
         // retreive tables and build SchemaRelation instances describing them
-        $query = ".tables";
+        $query = "select name from sqlite_master where type = 'table'";
         $results = array();
         foreach( $this->queryColumn( $query ) as $tableName )
         {
