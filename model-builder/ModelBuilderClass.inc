@@ -109,7 +109,7 @@ class ModelBuilderClass
      * @param   string  $templateName
      * @param   object  $object 
      */
-    public function createMethod( $templateName, object $object )
+    public function createMethod( $templateName, $object )
     {
         // retrieve the name of the object
         $name = $object->getName();

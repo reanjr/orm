@@ -140,7 +140,7 @@ class ModelBuilder
         $file = file_get_contents( $filePath );
         
         // create extraction pattern
-        $pattern = "(?P<comment>\s*/\*\*.*?\n\s*\*/\s*\n)*";
+        $pattern = "(?P<comment>\s*/\*\*([^*]|\*(?!/))*?\n\s*\*/\s*\n)?";
         $pattern .= "(?P<lead>\s*)(?P<descriptor>(public|private|protected|abstract|final|static) )*";
         $pattern .= "function (?P<template>[^_]+)_(?<method>[^_]+)\s*\(.*?\n(?P=lead)}";
         $pattern = "@$pattern@s";
@@ -153,7 +153,9 @@ class ModelBuilder
                 throw new Exception( "could not find '$templateName' template" );
             }
             
-            return $matches[0][$index];
+            $template = $matches[0][$index];
+            $template = str_replace( "function $templateName" . "_", "function ", $template );
+            return $template;
         }
         throw new Exception( "could not find '$templateName' template" );
     }
