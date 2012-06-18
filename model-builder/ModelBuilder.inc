@@ -35,12 +35,16 @@ class ModelBuilder
      */
     public function addRelation( SchemaRelation $relation )
     {
-        $className = Orm::formatLogicalName( $relation );
-        $class = $this->createClass( $className );
+        $className = ucfirst( Orm::formatLogicalName( $relation ) ) . "Model";
+        $baseClassName = $className . "Base";
+        
+        $baseClass = $this->createClass( $baseClassName )->extend( "OrmModel" )->setAbstract( true );
         foreach( $relation->getAttributes() as $attribute )
         {
-            $this->addAttribute( $attribute, $className );
+            $this->addAttribute( $attribute, $baseClassName );
         }
+        
+        $class = $this->createClass( $className )->extend( $baseClassName );
     }
     
     /**

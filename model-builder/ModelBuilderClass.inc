@@ -6,6 +6,9 @@
 class ModelBuilderClass
 {
     protected $name = null;
+    protected $isAbstract = false;
+    protected $extend = null;
+    protected $implement = array();
     protected $properties = array();
     
     /**
@@ -26,6 +29,39 @@ class ModelBuilderClass
     public function getName()
     {
         return $this->name;
+    }
+    
+    /**
+     * Set whether this class is abstract and return this instance for chaining.
+     * 
+     * @param   bool    $value
+     */
+    public function setAbstract( $value )
+    {
+        $this->isAbstract = (bool)$value;
+    }
+    
+    /**
+     * Set the class from which this class inherits and return this instance for chaining.
+     * 
+     * @param   string              $className
+     * @return  ModelBuilderClass 
+     */
+    public function extend( $className )
+    {
+        $this->extend = (string)$className;
+        return $this;
+    }
+    
+    /**
+     * Add an interface which is implemented by this class and return this instance for chaining.
+     * 
+     * @param   string              $interfaceName
+     * @return  ModelBuilderClass 
+     */
+    public function implement( $interfaceName )
+    {
+        $this->implement[(string)$interfaceName] = (string)$interfaceName;
     }
     
     /**
@@ -74,8 +110,18 @@ class ModelBuilderClass
     public function getCode()
     {
         $name = $this->getName();
+        $descriptorString = $this->isAbstract
+          ? "abstract "
+          : "";
+        $extendsString = $this->extend
+          ? "extends " . $this->extend . " "
+          : "";
+        $implementsString = $this->implement
+          ? "implements " . implode( ", ", $this->implement ) . " "
+          : "";
+        
         $code = <<<CODE
-abstract class $name extends OrmModel
+{$descriptorString}class $name $extendsString$implementsString
 {
 }
 CODE;
