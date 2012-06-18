@@ -10,6 +10,7 @@ class ModelBuilderClass
     protected $extend = null;
     protected $implement = array();
     protected $properties = array();
+    protected $methods = array();
     
     /**
      * Set the name of the class.
@@ -100,6 +101,39 @@ class ModelBuilderClass
     public function getProperties()
     {
         return $this->properties;
+    }
+    
+    /**
+     * Create a new method based on the provided template and object.
+     * 
+     * @param   string  $templateName
+     * @param   object  $object 
+     */
+    public function createMethod( $templateName, object $object )
+    {
+        // retrieve the name of the object
+        $name = $object->getName();
+        
+        // create list of replacements
+        $replace = array();
+        $replace['friendly name'] = Orm::formatFriendlyName( $name );
+        $replace['logicalName'] = Orm::formatLogicalName( $name );
+        $replace['LogicalName'] = ucfirst(Orm::formatLogicalName( $name ));
+        $replace['physical_name'] = Orm::formatPhysicalName( $name );
+        
+        // if the object has a data type, set up the replacement
+        if( method_exists( $object, 'getDataType' ) )
+        {
+            $dataType = $object->getDataType();
+            $replace['object'] = $dataType;
+        }
+        
+        // get template and make replacements
+        $template = ModelBuilder::getMethodTemplate( $templateName );
+        $template = str_replace( array_keys( $replace ), array_values( $replace ), $template );
+        
+        // add final method to this instance
+        $this->methods[] = $template;
     }
     
     /**

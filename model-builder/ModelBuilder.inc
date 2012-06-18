@@ -80,8 +80,9 @@ class ModelBuilder
             default:
                 throw new Exception( "unknown data type '{$attribute->getDataType()}'" );
         }
-        $propertyName = Orm::formatLogicalName( $attribute->getName() );
-        $class->createProperty( $propertyName, $dataType );
+        $class->createProperty( Orm::formatLogicalName( $attribute->getName() ), $dataType );
+        $class->createMethod( 'simpleGetter', $attribute );
+        $class->createMethod( 'simpleSetter', $attribute );
     }
     
     /**
@@ -123,15 +124,38 @@ class ModelBuilder
     }
     
     /**
-     * Add a new property.  The data type should be on of the ISchematic::TYPE_* constants or a model class name.  If a
-     * property with the specified name already exists, do nothing.
+     * Parse the ModelBuilderMethodTemplates class and return the specified method template.
      * 
-     * @param   string  $name
-     * @param   string  $dataType
+     * @param   string  $templateName 
+     * @return  string
      */
-    public function addProperty( $name, $dataType )
+    public static function getMethodTemplate( $templateName )
     {
-        $this->properties[(string)$name] = (string)$dataType;
+        // ensure template class is loaded
+        $m = new ModelBuilderMethodTemplates();
+        
+        // find template class file and parse its contents
+        $reflector = new ReflectionClass( $m );
+        $filePath = $reflector->getFileName();
+        $file = file_get_contents( $filePath );
+        
+        // create extraction pattern
+        $pattern = "(?P<comment>\s*/\*\*.*?\n\s*\*/\s*\n)*";
+        $pattern .= "(?P<lead>\s*)(?P<descriptor>(public|private|protected|abstract|final|static) )*";
+        $pattern .= "function (?P<template>[^_]+)_(?<method>[^_]+)\s*\(.*?\n(?P=lead)}";
+        $pattern = "@$pattern@s";
+        
+        // find template
+        if( preg_match_all( $pattern, $file, $matches, PREG_PATTERN_ORDER ) )
+        {
+            if( false === ( $index = array_search( $templateName, $matches['template'] ) ) )
+            {
+                throw new Exception( "could not find '$templateName' template" );
+            }
+            
+            return $matches[0][$index];
+        }
+        throw new Exception( "could not find '$templateName' template" );
     }
     
 }
