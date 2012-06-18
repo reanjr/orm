@@ -39,7 +39,6 @@ class Orm
             $filePath = "$basePath/$fileName";
             file_put_contents( $filePath, $class->getCode() );
         }
-        
     }
     
     /**
