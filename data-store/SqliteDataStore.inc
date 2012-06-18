@@ -5,6 +5,9 @@
 
 class SqliteDataStore extends SqlDataStore
 {
+    const INTEGER = 'integer';
+    const TEXT = 'text';
+    
     /** @var Sqlite3 $db */
     protected $db = null;
     protected $path = null;
@@ -36,7 +39,13 @@ class SqliteDataStore extends SqlDataStore
     
     protected function mapDataType( $sqlType )
     {
-        return ISchematic::TYPE_TEXT;
+        switch( $sqlType )
+        {
+            case self::INTEGER:
+                return ISchematic::TYPE_INTEGER;
+            default:
+                return ISchematic::TYPE_TEXT;
+        }
     }
     
     protected function query( $query, $values = array() )
@@ -54,5 +63,92 @@ class SqliteDataStore extends SqlDataStore
         // execute the statement and return an iterator for the results
         return $statement->execute();
     }
+    
+    
+    /**************************************************************************
+     * ISchematic implementation 
+     **************************************************************************/
+        
+    public function getRelations()
+    {
+        // retreive tables and build SchemaRelation instances describing them
+        $query = ".tables";
+        $results = array();
+        foreach( $this->queryColumn( $query ) as $tableName )
+        {
+            $results[] = new SchemaRelation( $this, $tableName );
+        }
+        
+        // return the relations
+        return $results;
+    }
+
+    public function getRelationAttributes( $relationName )
+    {
+        // grab the columns and types and build SchemaAttribute instances describing the columns
+        $query = "pragma table_info(?)";
+        $values = array( $relationName );
+        $results = array();
+        foreach( $this->query( $query, $values ) as $record )
+        {
+            $name = $record['name'];
+            $dataType = $this->mapDataType( $record['type'] );
+            $results[] = new SchemaAttribute( $this, $relationName, $name, $dataType );
+        }
+
+        // return the attributes
+        return $results;
+    }
+    
+    public function getRelationships( $relationName )
+    {
+        // grab FK constraints and build SchemaRelationship instances describing the FK constraints
+        $query = "pragma foreign_key_list(?)";
+        $values = array( $relationName );
+        $results = array();
+        $fromKey = array();
+        $toKey = array();
+        foreach( $this->query( $query, $values ) as $record )
+        {
+            // if we are at sequence number 0, we have a new relationship
+            $sequence = $record['seq'];
+            if( $sequence == 0 )
+            {
+                // before we move to the new relationship, generate the previous one
+                if( $fromKey && $toKey )
+                {
+                    $fromKey = new SchemaKey( $fromKey );
+                    $toKey = new SchemaKey( $toKey );
+                    $results[] = new SchemaRelationship( $fromKey, $toKey );
+                    $fromKey = array();
+                    $toKey = array();
+                }
+                
+                $attributeName = $record['from'];
+                $matches = array_filter( $this->getRelationAttributes( $relationName ), function($attribute) use($attributeName) {
+                    return $attribute->getName() == $attributeName;
+                } );
+                $fromKey[] = array_shift( $matches );
+                
+                $referencedRelation = $record['table'];
+                $attributeName = $record['to'];
+                $matches = array_filter( $this->getRelationAttributes( $referencedRelation ), function($attribute) use($attributeName) {
+                    return $attribute->getName() == $attributeName;
+                } );
+                $toKey[] = array_shift( $matches );
+            }
+        }
+        
+        // create final relationship from leftover data
+        if( $fromKey && $toKey )
+        {
+            $fromKey = new SchemaKey( $fromKey );
+            $toKey = new SchemaKey( $toKey );
+            $results[] = new SchemaRelationship( $fromKey, $toKey );
+        }
+                
+        // return the relationship
+        return $results;
+    }    
     
 }
