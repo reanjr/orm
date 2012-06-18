@@ -80,7 +80,8 @@ class ModelBuilder
             default:
                 throw new Exception( "unknown data type '{$attribute->getDataType()}'" );
         }
-        $class->createProperty( $attribute->getName(), $dataType );
+        $propertyName = Orm::formatLogicalName( $attribute->getName() );
+        $class->createProperty( $propertyName, $dataType );
     }
     
     /**
