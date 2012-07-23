@@ -160,4 +160,22 @@ class ModelBuilder
         throw new Exception( "could not find '$templateName' template" );
     }
     
+    /**
+     * Return the values that will be replaced in a method template.
+     * 
+     * @return  array
+     */
+    public static function getTemplateValues( $name, $type )
+    {
+        return array(
+            "friendly name" => strtolower( Orm::formatFriendlyName( $name ) ),
+            "Friendly Name" => Orm::formatFriendlyName( $name ),
+            "logicalName" => Orm::formatLogicalName( $name ),
+            "LogicalName" => ucfirst( Orm::formatLogicalName( $name ) ),
+            "physical_name" => Orm::formatPhysicalName( $name ),
+            "(object)" => in_array( $type, array("int", "string", "bool", "array") ) ? "($type)" : "",
+            "object" => $type,
+        );
+    }
+    
 }

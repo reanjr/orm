@@ -164,19 +164,22 @@ class ModelBuilderClass
           ? "implements " . implode( ", ", $this->implement ) . " "
           : "";
         $propertiesString = $this->getPropertiesCode();
+        $propertiesAccessString = $this->getPropertiesAccessCode();
         
         $code = <<<CODE
 <?php
 {$descriptorString}class $name $extendsString$implementsString
 {
 $propertiesString
+$propertiesAccessString
+
 }
 CODE;
         return $code;
     }
     
     /**
-     * Genreate PHP code detailing this class's properties and return it
+     * Generate PHP code detailing this class's properties and return it
      * 
      * @return  string
      */
@@ -189,7 +192,29 @@ CODE;
                    "    protected \$$name = null;\n";
         }, $this->getProperties() );
         
-        return implode( "\n", $propertiesStrings );
+        return trim(implode( "\n", $propertiesStrings ), "\n");
+    }
+    
+    /**
+     * Generate PHP code for accessing this class's properties and return it.
+     * 
+     * @return string
+     */
+    protected function getPropertiesAccessCode()
+    {
+        $code = array();
+        foreach( $this->getProperties() as $property )
+        {
+            $getterTemplate = ModelBuilder::getMethodTemplate( "simpleGetter" );
+            $setterTemplate = ModelBuilder::getMethodTemplate( "simpleSetter" );
+            
+            $templateValues = ModelBuilder::getTemplateValues( $property->getName(), $property->getDataType() );
+            $getter = str_replace( array_keys( $templateValues ), array_values( $templateValues ), $getterTemplate );
+            $setter = str_replace( array_keys( $templateValues ), array_values( $templateValues ), $setterTemplate );
+        
+            $code[] = "$getter$setter";
+        }
+        return implode( "\n", $code );
     }
     
 }

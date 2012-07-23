@@ -9,9 +9,9 @@ require_once( 'autoload.inc' );
 $configFile = file_get_contents( 'orm_config.json' );
 $config = json_decode( $configFile, true );
 
-// connect to data store
-$data = new SqliteDataStore( "test/example.db" );
-$data->connect();
+// register the data store and get a connection for it
+Orm::registerDataStore( "Example", "sqlite", array( "test/example.db" ) );
+$dataStore = Orm::getDataStore( "Example" );
 
 // create model files
-Orm::generateModels( $data, $config );
+Orm::generateModels( $dataStore, $config );
