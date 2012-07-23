@@ -3,7 +3,7 @@
  * Copyright Skinit, Inc.
  */
 
-abstract class SqlDataStore extends OrmDataStore implements ISchematic
+abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISchematic
 {
     
     /**
@@ -74,9 +74,9 @@ abstract class SqlDataStore extends OrmDataStore implements ISchematic
      * OrmDataStore implementation
      **************************************************************************/
     
-    public function fetch( $relationName, $key )
+    public function fetch( $relation, $key )
     {
-        $query = "select * from \"$relationName\"";
+        $query = "select * from \"$relation\"";
         $filter = array();
         $values = array();
         foreach( $key as $name => $value )
@@ -88,6 +88,16 @@ abstract class SqlDataStore extends OrmDataStore implements ISchematic
           ? " where " . implode( " and ", $filter )
           : "";
         return $this->queryOne( $query, $values );
+    }
+    
+    /**************************************************************************
+     * IKeylessAccess implementation
+     **************************************************************************/
+
+    public function findAll( $relation )
+    {
+        $query = "select * from \"$relation\"";
+        return $this->query( $query, array() );
     }
     
     /**************************************************************************

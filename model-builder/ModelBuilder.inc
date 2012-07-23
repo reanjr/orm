@@ -24,7 +24,12 @@ class ModelBuilder
      */
     public function addSchema( ISchematic $schema )
     {
-        $function = array( $this, 'addRelation' );
+        $values = ( $schema instanceof OrmDataStore )
+          ? array( "dataStoreName" => $schema->getName() )
+          : array();
+        
+        $instance = $this;
+        $function = function(SchemaRelation $relation) use($instance, $values) { $instance->addRelation( $relation, $values ); };
         array_walk( $schema->getRelations(), $function );
     }
     
@@ -32,8 +37,9 @@ class ModelBuilder
      * Add a model for the provided relation.
      * 
      * @param   SchemaRelation  $relation 
+     * @param   array           $values
      */
-    public function addRelation( SchemaRelation $relation )
+    public function addRelation( SchemaRelation $relation, $values = array() )
     {
         $className = ucfirst( Orm::formatLogicalName( $relation ) ) . "Model";
         $baseClassName = $className . "Base";
@@ -42,6 +48,10 @@ class ModelBuilder
         foreach( $relation->getAttributes() as $attribute )
         {
             $this->addAttribute( $attribute, $baseClassName );
+        }
+        foreach( $values as $name => $value )
+        {
+            $this->addReadValue( $name, $value, $baseClassName );
         }
         
         $class = $this->createClass( $className )->extend( $baseClassName );
@@ -81,8 +91,25 @@ class ModelBuilder
                 throw new Exception( "unknown data type '{$attribute->getDataType()}'" );
         }
         $class->createProperty( Orm::formatLogicalName( $attribute->getName() ), $dataType );
-        $class->createMethod( 'simpleGetter', $attribute );
-        $class->createMethod( 'simpleSetter', $attribute );
+        $class->createMethod( 'simpleGetter', $attribute->getName(), $attribute->getDataType() );
+        $class->createMethod( 'simpleSetter', $attribute->getName(), $attribute->getDataType() );
+    }
+    
+    /**
+     * Add a read-only literal property to the class specified.
+     * 
+     * @param   string  $name
+     * @param   mixed   $value
+     * @param   string  $className
+     */
+    public function addReadValue( $name, $value, $className )
+    {
+        if( !isset($this->classes[(string)$className]) )
+        {
+            throw new Exception( "unknown class '$className'" );
+        }
+        $class = $this->classes[(string)$className];
+        $class->createMethod( "readValue", $name, null, $value );
     }
     
     /**
@@ -158,25 +185,6 @@ class ModelBuilder
             return $template;
         }
         throw new Exception( "could not find '$templateName' template" );
-    }
-    
-    /**
-     * Return the values that will be replaced in a method template.
-     * 
-     * @return  array
-     */
-    public static function getTemplateValues( $name, $type )
-    {
-        return array(
-            "RAW_NAME" => $name,
-            "friendly name" => strtolower( Orm::formatFriendlyName( $name ) ),
-            "Friendly Name" => Orm::formatFriendlyName( $name ),
-            "logicalName" => Orm::formatLogicalName( $name ),
-            "LogicalName" => ucfirst( Orm::formatLogicalName( $name ) ),
-            "physical_name" => Orm::formatPhysicalName( $name ),
-            "(object)" => in_array( $type, array("int", "string", "bool", "array") ) ? "($type)" : "",
-            "object" => $type,
-        );
     }
     
 }

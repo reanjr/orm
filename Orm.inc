@@ -97,6 +97,7 @@ class Orm
             $reflector = new ReflectionClass( $className );
             $dataStoreInstance = $reflector->newInstanceArgs( $dataStoreInfo[$name]["arguments"] );
             $dataStoreInstance->connect();
+            $dataStoreInstance->setName( $name );
             $instance->dataStores[$name]["instance"] = $dataStoreInstance;
         }
         
@@ -128,16 +129,13 @@ class Orm
         $userPath = array_key_exists( 'user_output_dir', $config )
           ? $config['user_output_dir']
           : '.';
-        $extensionMethods = array_key_exists( "extension_methods", $config )
-          ? $config["extension_methods"]
-          : array();
         
         foreach( $modelBuilder->getClasses() as $class )
         {
             $className = (string)$class;
             $fileName = "$className.inc";
             $filePath = "$basePath/$fileName";
-            file_put_contents( $filePath, $class->getCode( $extensionMethods ) );
+            file_put_contents( $filePath, $class->getCode() );
         }
     }
     

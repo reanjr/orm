@@ -7,13 +7,13 @@ class ModelBuilderMethodTemplates
 {
     
     /**
-     * Return the name of the data store for this model.
+     * Return the friendly name for this instance.
      * 
-     * @return string 
+     * @return object
      */
-    public function getDataStoreName_getDataStoreName()
+    public function readValue_getLogicalName()
     {
-        return "RAW_NAME";
+        return LITERAL;
     }
     
     /**

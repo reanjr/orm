@@ -32,11 +32,6 @@ class SqliteDataStore extends SqlDataStore
         $this->db = new SQLite3( $this->path, SQLITE3_OPEN_READWRITE );
     }
     
-    public function getName()
-    {
-        return basename( $this->path );
-    }
-    
     protected function mapDataType( $sqlType )
     {
         switch( $sqlType )

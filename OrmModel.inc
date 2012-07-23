@@ -235,5 +235,5 @@ abstract class OrmModel
         }
         $this->hydrated = true;
     }
-    
+
 }

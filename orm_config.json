@@ -2,10 +2,6 @@
     "user_output_dir": "model",
     "base_output_dir": "base",
 
-    "extension_methods": {
-        "getDataStoreName": [ "Example" ]
-    },
-
     "model": {
         "Orders": {
             "name": "Order"
