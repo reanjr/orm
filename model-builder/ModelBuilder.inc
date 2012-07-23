@@ -24,22 +24,30 @@ class ModelBuilder
      */
     public function addSchema( ISchematic $schema )
     {
-        $values = ( $schema instanceof OrmDataStore )
-          ? array( "dataStoreName" => $schema->getName() )
-          : array();
-        
-        $instance = $this;
-        $function = function(SchemaRelation $relation) use($instance, $values) { $instance->addRelation( $relation, $values ); };
+        $function = array( $this, "addRelation" );
         array_walk( $schema->getRelations(), $function );
+        
+        foreach( $this->getClasses() as $class )
+        {
+            if( $schema instanceof OrmDataStore )
+            {
+                $class->createMethod( "readValue", "dataStoreName", "string", $schema->getName() );
+            }
+            
+            if( $schema instanceof IKeylessAccess )
+            {
+                
+            }
+        }
+        
     }
     
     /**
      * Add a model for the provided relation.
      * 
      * @param   SchemaRelation  $relation 
-     * @param   array           $values
      */
-    public function addRelation( SchemaRelation $relation, $values = array() )
+    public function addRelation( SchemaRelation $relation )
     {
         $className = ucfirst( Orm::formatLogicalName( $relation ) ) . "Model";
         $baseClassName = $className . "Base";
@@ -48,10 +56,6 @@ class ModelBuilder
         foreach( $relation->getAttributes() as $attribute )
         {
             $this->addAttribute( $attribute, $baseClassName );
-        }
-        foreach( $values as $name => $value )
-        {
-            $this->addReadValue( $name, $value, $baseClassName );
         }
         
         $class = $this->createClass( $className )->extend( $baseClassName );

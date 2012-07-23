@@ -17,6 +17,18 @@ class ModelBuilderMethodTemplates
     }
     
     /**
+     * Find all records for this model and return an iterator over the results.
+     * 
+     * @return  Iterator 
+     */
+    public function keylessFindAll_findAll()
+    {
+        $dataStoreName = $this->getDataStoreName();
+        $dataStore = Orm::getDataStore( $dataStoreName );
+        $dataStore->findAll( $this->getRelationName() );
+    }
+    
+    /**
      * Return friendly name property.
      * 
      * @return object
