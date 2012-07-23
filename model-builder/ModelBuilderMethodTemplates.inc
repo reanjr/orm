@@ -7,6 +7,16 @@ class ModelBuilderMethodTemplates
 {
     
     /**
+     * Return the name of the data store for this model.
+     * 
+     * @return string 
+     */
+    public function getDataStoreName_getDataStoreName()
+    {
+        return "RAW_NAME";
+    }
+    
+    /**
      * Return friendly name property.
      * 
      * @return object

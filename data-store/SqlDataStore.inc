@@ -69,7 +69,26 @@ abstract class SqlDataStore extends OrmDataStore implements ISchematic
         }
         return $result;
     }
+
+    /**************************************************************************
+     * OrmDataStore implementation
+     **************************************************************************/
     
+    public function fetch( $relationName, $key )
+    {
+        $query = "select * from \"$relationName\"";
+        $filter = array();
+        $values = array();
+        foreach( $key as $name => $value )
+        {
+            $filter[] = "\"$name\" = ?";
+            $values[] = $value;
+        }
+        $query .= $filter
+          ? " where " . implode( " and ", $filter )
+          : "";
+        return $this->queryOne( $query, $values );
+    }
     
     /**************************************************************************
      * ISchematic implementation 

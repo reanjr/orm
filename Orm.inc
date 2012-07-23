@@ -64,7 +64,8 @@ class Orm
      * Retrieve the named data store instance.  If one does not exist, create one, call its connect method, and return
      * it.  The data store must first be registered with Orm::registerDataStore.
      * 
-     * @param   string  $name 
+     * @param   string          $name 
+     * @return  OrmDataStore
      */
     public static function getDataStore( $name )
     {
@@ -127,13 +128,16 @@ class Orm
         $userPath = array_key_exists( 'user_output_dir', $config )
           ? $config['user_output_dir']
           : '.';
+        $extensionMethods = array_key_exists( "extension_methods", $config )
+          ? $config["extension_methods"]
+          : array();
         
         foreach( $modelBuilder->getClasses() as $class )
         {
             $className = (string)$class;
             $fileName = "$className.inc";
             $filePath = "$basePath/$fileName";
-            file_put_contents( $filePath, $class->getCode() );
+            file_put_contents( $filePath, $class->getCode( $extensionMethods ) );
         }
     }
     

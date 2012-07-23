@@ -168,6 +168,7 @@ class ModelBuilder
     public static function getTemplateValues( $name, $type )
     {
         return array(
+            "RAW_NAME" => $name,
             "friendly name" => strtolower( Orm::formatFriendlyName( $name ) ),
             "Friendly Name" => Orm::formatFriendlyName( $name ),
             "logicalName" => Orm::formatLogicalName( $name ),

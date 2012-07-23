@@ -58,11 +58,11 @@ abstract class OrmModel
     }
     
     /**
-     * Return the connection name for this model's data store.
+     * Return the name of this model's data store.
      * 
      * @return  string
      */
-    abstract public function getConnection();
+    abstract public function getDataStoreName();
     
     /**
      * Return the schema name for this model's data store. 
@@ -207,8 +207,15 @@ abstract class OrmModel
      */
     public function refresh()
     {
-        $connection = $this->getConnection();
-        $dataStore = OrmDataStore::getConnection( $connection );
+        $dataStoreName = $this->getDataStoreName();
+        $dataStore = Orm::getDataStore( $dataStoreName );
+        $keyValue = array();
+        foreach( $this->getPrimaryKey() as $name )
+        {
+            $keyValue[$name] = $this->$name;
+        }
+        $data = $dataStore->fetch( $this->getRelation(), $keyValue );
+        $this->hydrate( $data );
         
         // clear flags tracking modified fields and set to materialized
         $this->modified = array();

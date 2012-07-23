@@ -147,11 +147,12 @@ class ModelBuilderClass
     }
     
     /**
-     * Generate PHP code for this class and return it.
+     * Generate PHP code for this class and return it.  Add in any requested template methods.
      * 
+     * @param   array   $extensionMethods
      * @return  string 
      */
-    public function getCode()
+    public function getCode( $extensionMethods = array() )
     {
         $name = $this->getName();
         $descriptorString = $this->isAbstract
@@ -165,6 +166,7 @@ class ModelBuilderClass
           : "";
         $propertiesString = $this->getPropertiesCode();
         $propertiesAccessString = $this->getPropertiesAccessCode();
+        $extensionString = $this->getExtensionMethodCode( $extensionMethods );
         
         $code = <<<CODE
 <?php
@@ -172,7 +174,7 @@ class ModelBuilderClass
 {
 $propertiesString
 $propertiesAccessString
-
+$extensionString
 }
 CODE;
         return $code;
@@ -215,6 +217,20 @@ CODE;
             $code[] = "$getter$setter";
         }
         return implode( "\n", $code );
+    }
+    
+    protected function getExtensionMethodCode( $extensionMethods )
+    {
+        $code = array();
+        foreach( $extensionMethods as $templateName => $arguments )
+        {
+            $template = ModelBuilder::getMethodTemplate( $templateName );
+            $baseName = array_shift( $arguments );
+            $type = array_shift( $arguments );
+            $templateValues = ModelBuilder::getTemplateValues( $baseName, $type );
+            $code[] = str_replace( array_keys( $templateValues ), array_values( $templateValues ), $template );
+        }
+        return implode( "", $code );
     }
     
 }
