@@ -10,9 +10,9 @@ function __autoload( $className )
     $filtered = new RegexIterator( $flattened, '@^.*\.inc$@', RecursiveRegexIterator::GET_MATCH );
     
     $classFile = "$className.inc";
-    foreach( $filtered as $files )
+    foreach( $filtered as $results )
     {
-        $file = array_shift( $files );
+        $file = array_shift( $results );
         if( basename( $file ) == $classFile )
         {
             require_once( $file );
