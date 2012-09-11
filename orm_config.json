@@ -1,7 +1,7 @@
 {
     "user_output_dir": "model",
     "base_output_dir": "base",
- 
+
     "model": {
         "Orders": {
             "name": "Order"

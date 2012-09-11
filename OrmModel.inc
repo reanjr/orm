@@ -8,9 +8,6 @@ abstract class OrmModel
     protected $materialized = false;
     protected $hydrated = false;
     
-    /** @var    array   $properties     the current model property values */
-    private $properties = array();
-    
     /** @var    array   $modified       the list of properties that have been modified */
     private $modified = array();
     
@@ -32,7 +29,7 @@ abstract class OrmModel
         // ensure the number of provided key values matches the number of values in the PK
         if( count($keyValues) != count($keyNames) )
         {
-            throw new Exception( Orm::ERROR_INVALID_PRIMARY_KEY );
+            throw new OrmSchemaException( count($keyNames) . " values expected for PK" );
         }
         
         // set PK properties
@@ -61,11 +58,11 @@ abstract class OrmModel
     }
     
     /**
-     * Return the connection name for this model's data store.
+     * Return the name of this model's data store.
      * 
      * @return  string
      */
-    abstract public function getConnection();
+    abstract public function getDataStoreName();
     
     /**
      * Return the schema name for this model's data store. 
@@ -106,26 +103,6 @@ abstract class OrmModel
      * @return  array 
      */
     abstract public function getUniqueKeys();
-    
-    /**
-     * Return true if this model's application does not match the current application.  Otherwise, return false.
-     * 
-     * @return  bool
-     */
-    public function isRemote()
-    {
-        return $this->getApplication() != Orm::getCurrentApplication();
-    }
-    
-    /**
-     * Return true if this model's application matches the current application.  Otherwise, return false.
-     * 
-     * @return  bool 
-     */
-    public function isLocal()
-    {
-        return $this->getApplication() == Orm::getCurrentApplication();
-    }
     
     /**
      * Return true if any of the properties of this model have been updated since the last time it was saved.  Otherwise
@@ -201,19 +178,48 @@ abstract class OrmModel
      */
     protected function getProperty( $propertyName )
     {
-        
+        $propertyName = Orm::formatLogicalName( $propertyName );
+        return property_exists( $class, $propertyName )
+          ? $this->$propertyName
+          : null;
+    }
+    
+    /**
+     * Set the value of the specified property.
+     * 
+     * @param   string  $propertyName
+     * @param   mixed   $value
+     */
+    protected function setProperty( $propertyName, $value )
+    {
+        $propertyName = Orm::formatLogicalName( $propertyName );
+        if( property_exists( $this, $propertyName ) )
+        {
+            $this->$propertyName = $value;
+            $this->modified[$propertyName] = $propertyName;
+        }
     }
 
     /**
      * Using the current primary key values for this instance, look up this model's properties in the data store and
-     * hydrate it with the resulting data.  Set all fields to unmodified.  If the record can not be found in the data
-     * store, throw an exception.
+     * hydrate it with the resulting data, set this instance to materialized, and set all fields to unmodified.  If the
+     * record can not be found in the data store, throw an exception.
      */
     public function refresh()
     {
+        $dataStoreName = $this->getDataStoreName();
+        $dataStore = Orm::getDataStore( $dataStoreName );
+        $keyValue = array();
+        foreach( $this->getPrimaryKey() as $name )
+        {
+            $keyValue[$name] = $this->$name;
+        }
+        $data = $dataStore->fetch( $this->getRelation(), $keyValue );
+        $this->hydrate( $data );
         
-        // clear flags tracking modified fields
+        // clear flags tracking modified fields and set to materialized
         $this->modified = array();
+        $this->materialized = true;
     }
     
     /**
@@ -227,6 +233,7 @@ abstract class OrmModel
         {
             $this->$name = $value;
         }
+        $this->hydrated = true;
     }
-    
+
 }

@@ -24,8 +24,22 @@ class ModelBuilder
      */
     public function addSchema( ISchematic $schema )
     {
-        $function = array( $this, 'addRelation' );
+        $function = array( $this, "addRelation" );
         array_walk( $schema->getRelations(), $function );
+        
+        foreach( $this->getClasses() as $class )
+        {
+            if( $schema instanceof OrmDataStore )
+            {
+                $class->createMethod( "readValue", "dataStoreName", "string", $schema->getName() );
+            }
+            
+            if( $schema instanceof IKeylessAccess )
+            {
+                
+            }
+        }
+        
     }
     
     /**
@@ -81,8 +95,25 @@ class ModelBuilder
                 throw new Exception( "unknown data type '{$attribute->getDataType()}'" );
         }
         $class->createProperty( Orm::formatLogicalName( $attribute->getName() ), $dataType );
-        $class->createMethod( 'simpleGetter', $attribute );
-        $class->createMethod( 'simpleSetter', $attribute );
+        $class->createMethod( 'simpleGetter', $attribute->getName(), $attribute->getDataType() );
+        $class->createMethod( 'simpleSetter', $attribute->getName(), $attribute->getDataType() );
+    }
+    
+    /**
+     * Add a read-only literal property to the class specified.
+     * 
+     * @param   string  $name
+     * @param   mixed   $value
+     * @param   string  $className
+     */
+    public function addReadValue( $name, $value, $className )
+    {
+        if( !isset($this->classes[(string)$className]) )
+        {
+            throw new Exception( "unknown class '$className'" );
+        }
+        $class = $this->classes[(string)$className];
+        $class->createMethod( "readValue", $name, null, $value );
     }
     
     /**
@@ -140,7 +171,7 @@ class ModelBuilder
         $file = file_get_contents( $filePath );
         
         // create extraction pattern
-        $pattern = "(?P<comment>\s*/\*\*.*?\n\s*\*/\s*\n)*";
+        $pattern = "(?P<comment>\s*/\*\*([^*]|\*(?!/))*?\n\s*\*/\s*\n)?";
         $pattern .= "(?P<lead>\s*)(?P<descriptor>(public|private|protected|abstract|final|static) )*";
         $pattern .= "function (?P<template>[^_]+)_(?<method>[^_]+)\s*\(.*?\n(?P=lead)}";
         $pattern = "@$pattern@s";
@@ -153,7 +184,9 @@ class ModelBuilder
                 throw new Exception( "could not find '$templateName' template" );
             }
             
-            return $matches[0][$index];
+            $template = $matches[0][$index];
+            $template = str_replace( "function $templateName" . "_", "function ", $template );
+            return $template;
         }
         throw new Exception( "could not find '$templateName' template" );
     }

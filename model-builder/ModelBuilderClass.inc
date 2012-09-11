@@ -109,23 +109,45 @@ class ModelBuilderClass
      * @param   string  $templateName
      * @param   object  $object 
      */
-    public function createMethod( $templateName, $object )
+    public function createMethod( $templateName, $name, $dataType = null, $literal = null )
     {
-        // retrieve the name of the object
-        $name = $object->getName();
-        
         // create list of replacements
         $replace = array();
-        $replace['friendly name'] = Orm::formatFriendlyName( $name );
+        $replace["RAW_NAME"] = $name;
+        $replace['friendly name'] = strtolower(Orm::formatFriendlyName( $name ));
+        $replace["Friendly Name"] = Orm::formatFriendlyName( $name );
         $replace['logicalName'] = Orm::formatLogicalName( $name );
         $replace['LogicalName'] = ucfirst(Orm::formatLogicalName( $name ));
         $replace['physical_name'] = Orm::formatPhysicalName( $name );
         
-        // if the object has a data type, set up the replacement
-        if( method_exists( $object, 'getDataType' ) )
+        // format the literal value
+        switch( gettype($literal) )
         {
-            $dataType = $object->getDataType();
+            case "string":
+                $replace["LITERAL"] = '"' . str_replace( '"', '\"', $literal ) . '"';
+                $dataType = $dataType ?: "string";
+                break;
+            case "integer":
+                $replace["LITERAL"] = (string)$literal;
+                $dataType = $dataType ?: "int";
+            case "double":
+                $replace["LITERAL"] = (string)$literal;
+                $dataType = $dataType ?: "float";
+                break;
+            case "boolean":
+                $replace["LITERAL"] = $literal ? "true" : "false";
+                $dataType = $dataType ?: "bool";
+                break;
+            default:
+                $replace["LITERAL"] = "null";
+        }
+        
+        // if the object has a data type, set up the replacement
+        if( $dataType )
+        {
             $replace['object'] = $dataType;
+            $replace["(object)"] = in_array( $dataType, array("int", "string", "bool", "array") ) ? "($dataType)" : "";
+            $replace["object"] = $dataType;
         }
         
         // get template and make replacements
@@ -164,19 +186,22 @@ class ModelBuilderClass
           ? "implements " . implode( ", ", $this->implement ) . " "
           : "";
         $propertiesString = $this->getPropertiesCode();
+        $methodsString = $this->getMethodsCode();
         
         $code = <<<CODE
 <?php
 {$descriptorString}class $name $extendsString$implementsString
 {
 $propertiesString
+$methodsString
+
 }
 CODE;
         return $code;
     }
     
     /**
-     * Genreate PHP code detailing this class's properties and return it
+     * Generate PHP code detailing this class's properties and return it
      * 
      * @return  string
      */
@@ -189,7 +214,16 @@ CODE;
                    "    protected \$$name = null;\n";
         }, $this->getProperties() );
         
-        return implode( "\n", $propertiesStrings );
+        return trim(implode( "\n", $propertiesStrings ), "\n");
     }
     
+    /**
+     * Generate the code for the PHP methods for this class and return it.
+     * 
+     * @return  string 
+     */
+    public function getMethodsCode()
+    {
+        return implode( "", $this->methods );
+    }
 }
