@@ -113,6 +113,11 @@ abstract class SqlDataStore extends OrmDataStore implements ISchematic
         return $results;
     }
     
+    public function getRelationKeyAttributes( $relationName )
+    {
+        // grab the PK columns and types from the information schema
+    }
+    
     public function getRelationships( $relationName )
     {
         // grab the FK constraints from the information schema

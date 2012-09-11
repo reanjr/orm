@@ -27,12 +27,22 @@ interface ISchematic
 
     /**
      * Return a list of attributes (columns in SQL) for the provided relation as an array of SchemaAttribute
-     * instances.
+     * instances.  If the data store does not typically have any attributes for it's key, virtual attributes should be
+     * included for these key attributes.  An example might be a service which is given an id to identify a result, but
+     * does not return that id in the result data.
      *
      * @param   string  $relationName
      * @return  array
      */
     function getRelationAttributes( $relationName );
+    
+    /**
+     * Return a list of the key attributes (PK columns in SQL) for the provided relation as an array of SchemaAttribute
+     * instances.
+     * 
+     * @return  array
+     */
+    function getRelationKeyAttributes( $relationName );
 
     /**
      * Return a list of relationships (foreign key constraints in SQL) for the provided relation as array of
