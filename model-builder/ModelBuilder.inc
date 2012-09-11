@@ -94,6 +94,7 @@ class ModelBuilder
             default:
                 throw new Exception( "unknown data type '{$attribute->getDataType()}'" );
         }
+        $class->createConstant( strtoupper(Orm::formatPhysicalName( $attribute->getName() )), $attribute->getName() );
         $class->createProperty( Orm::formatLogicalName( $attribute->getName() ), $dataType );
         $class->createMethod( 'simpleGetter', $attribute->getName(), $attribute->getDataType() );
         $class->createMethod( 'simpleSetter', $attribute->getName(), $attribute->getDataType() );

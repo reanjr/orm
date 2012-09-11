@@ -9,6 +9,7 @@ class ModelBuilderClass
     protected $isAbstract = false;
     protected $extend = null;
     protected $implement = array();
+    protected $constants = array();
     protected $properties = array();
     protected $methods = array();
     
@@ -66,6 +67,45 @@ class ModelBuilderClass
     }
     
     /**
+     * Add the provided constant to the class.
+     * 
+     * @param   ModelBuilderConstant    $constant
+     */
+    public function addConstant( $constant )
+    {
+        if( array_key_exists( (string)$constant, $this->constants ) )
+        {
+            throw new Exception( "duplicate constant name '$constant'" );
+        }
+        
+        $this->constants[(string)$constant] = $constant;
+    }
+    
+    /**
+     * Create a new constant, associate it with this instance, and return it.
+     * 
+     * @param   string                  $constantName
+     * @param   mixed                   $value
+     * @return  ModelBuilderConstant
+     */
+    public function createConstant( $constantName, $value )
+    {
+        $constant = new ModelBuilderConstant( $constantName, $value );
+        $this->addConstant( $constant );
+        return $constant;
+    }
+    
+    /**
+     * Return a list of constants associated with this instance.
+     * 
+     * @return  array
+     */
+    public function getConstants()
+    {
+        return $this->constants;
+    }
+        
+    /**
      * Add the provided property to this instance.
      * 
      * @param   ModelBuilderProperty    $property 
@@ -83,8 +123,9 @@ class ModelBuilderClass
     /**
      * Create a new property, associate it with this instance, and return it.
      * 
-     * @param   string  $propertyName
-     * @param   string  $dataType
+     * @param   string                  $propertyName
+     * @param   string                  $dataType
+     * @return  ModelBuilderProperty
      */
     public function createProperty( $propertyName, $dataType )
     {
@@ -185,6 +226,7 @@ class ModelBuilderClass
         $implementsString = $this->implement
           ? "implements " . implode( ", ", $this->implement ) . " "
           : "";
+        $constantsString = $this->getConstantsCode();
         $propertiesString = $this->getPropertiesCode();
         $methodsString = $this->getMethodsCode();
         
@@ -192,12 +234,32 @@ class ModelBuilderClass
 <?php
 {$descriptorString}class $name $extendsString$implementsString
 {
+$constantsString
+
 $propertiesString
 $methodsString
 
 }
 CODE;
         return $code;
+    }
+    
+    /**
+     * Generate PHP code detailing this class's constants and return it
+     * 
+     * @return  string
+     */
+    protected function getConstantsCode()
+    {
+        $constantsStrings = array_map( function(ModelBuilderConstant $constant) {
+            $value = $constant->getPhpValue();
+            $name = $constant->getName();
+            $friendlyName = strtolower( Orm::formatFriendlyName( $name ) );
+            return "    /** constant for $friendlyName attribute name */\n" .
+                   "    const $name = $value;\n";
+        }, $this->getConstants() );
+        
+        return trim(implode( "\n", $constantsStrings ), "\n");
     }
     
     /**

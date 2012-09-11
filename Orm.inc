@@ -135,7 +135,11 @@ class Orm
             $className = (string)$class;
             $fileName = "$className.inc";
             $filePath = "$basePath/$fileName";
-            file_put_contents( $filePath, $class->getCode() );
+            $code = $class->getCode();
+            if( false === file_put_contents( $filePath, $code ) )
+            {
+                throw new Exception( "could not write to $filePath (check permissions)" );
+            }
         }
     }
     
