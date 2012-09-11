@@ -7,6 +7,16 @@ class ModelBuilderMethodTemplates
 {
     
     /**
+     * Return the primary key tuple.
+     * 
+     * @return array
+     */
+    public function pkGetter_getPrimaryKey()
+    {
+        
+    }
+    
+    /**
      * Return friendly name property.
      * 
      * @return object
