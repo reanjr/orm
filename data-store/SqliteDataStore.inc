@@ -95,7 +95,31 @@ class SqliteDataStore extends SqlDataStore
         // return the attributes
         return $results;
     }
-    
+
+    public function getRelationKeyAttributes( $relationName )
+    {
+        // grab the key columns info and build SchemaAttribute instances describing the columns
+        $tableName = str_replace( '"', '""', $relationName );
+        $query = "pragma table_info(\"$tableName\")";
+        $results = array();
+        foreach( $this->query( $query ) as $record )
+        {
+            // if this column isn't part of the OK, skip it
+            if( !$record["pk"] )
+            {
+                continue;
+            }
+            
+            // build the attribute and add it to the results
+            $name = $record['name'];
+            $dataType = $this->mapDataType( $record['type'] );
+            $results[] = new SchemaAttribute( $this, $relationName, $name, $dataType );
+        }
+
+        // return the attributes
+        return $results;
+    }
+ 
     public function getRelationships( $relationName )
     {
         // grab FK constraints and build SchemaRelationship instances describing the FK constraints
