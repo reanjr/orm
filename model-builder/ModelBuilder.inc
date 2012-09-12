@@ -60,11 +60,11 @@ class ModelBuilder
             $this->addAttribute( $attribute, $baseClassName );
         }
         
-        // add metadata describing which attributes are part of the key
+        // add method to provide which attributes are part of the key
         $keyNames = array_map( function(SchemaAttribute $attribute) {
             return $attribute->getName();
         }, $relation->getKeyAttributes() );
-        $baseClass->setMetadata( "key", $keyNames );
+        $baseClass->createMethod( "pkGetter", null, null, $keyNames );
 
         // create stubbed user class
         $this->createClass( $className )->extend( $baseClassName );
