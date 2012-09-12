@@ -9,9 +9,12 @@ class ModelBuilderClass
     protected $isAbstract = false;
     protected $extend = null;
     protected $implement = array();
+    
     protected $constants = array();
     protected $properties = array();
     protected $methods = array();
+    
+    protected $metadata = array();
     
     /**
      * Set the name of the class.
@@ -36,7 +39,8 @@ class ModelBuilderClass
     /**
      * Set whether this class is abstract and return this instance for chaining.
      * 
-     * @param   bool    $value
+     * @param   bool                $value
+     * @return  ModelBuilderClass
      */
     public function setAbstract( $value )
     {
@@ -171,6 +175,7 @@ class ModelBuilderClass
             case "integer":
                 $replace["LITERAL"] = (string)$literal;
                 $dataType = $dataType ?: "int";
+                break;
             case "double":
                 $replace["LITERAL"] = (string)$literal;
                 $dataType = $dataType ?: "float";
@@ -197,6 +202,19 @@ class ModelBuilderClass
         
         // add final method to this instance
         $this->methods[] = $template;
+    }
+    
+    /**
+     * Set metadata for the class.  If there is already a value for the specified metadata value, it will be
+     * overwritten.  The template methods may use this metadata to control modify their behavior depending on the model
+     * structure.
+     * 
+     * @param   string  $name
+     * @param   mixed   $value
+     */
+    public function setMetadata( $name, $value )
+    {
+        $this->metadata[(string)$name] = $value;
     }
     
     /**

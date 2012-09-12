@@ -80,7 +80,7 @@ abstract class OrmModel
     
     /**
      * Return the keys for the model.  This includes the primary key and any additional unique keys.  Each key is a
-     * tuple of field names.
+     * tuple of attribute names.
      * 
      * @return  array
      */
@@ -90,11 +90,11 @@ abstract class OrmModel
     }
     
     /**
-     * Return the primary key for the model.  This is a tuple of field names.
+     * Return the primary key attribute names for the model.
      * 
      * @return  array 
      */
-    abstract public function getPrimaryKey();
+    abstract public function getPrimaryKeyAttributes();
     
     /**
      * Return unique keys for the model.  These are each a tuple of field names.  This should not include the primary
@@ -170,6 +170,21 @@ abstract class OrmModel
           : null;
     }
 
+    /**
+     * Return the primary key value tuple for this instance.
+     * 
+     * @return  array
+     */
+    public function getPrimaryKey()
+    {
+        $key = array();
+        foreach( $this->getPrimaryKeyAttributes() as $attributeName )
+        {
+            $key = $this->getProperty( $attributeName );
+        }
+        return $key;
+    }
+    
     /**
      * Return the value of the specified property.
      *

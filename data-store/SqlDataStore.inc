@@ -145,6 +145,29 @@ abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISch
     public function getRelationKeyAttributes( $relationName )
     {
         // grab the PK columns and types from the information schema
+        $query  = "select kcu.column_name";
+        $query .= " from information_schema.key_column_usage kcu";
+        $query .= " inner join information_schema.table_constraints tc";
+        $query .= " on kcu.constraint_schema = tc.constraint_schema";
+        $query .= " and kcu.constraint_name = tc.constraint_name";
+        $query .= " and kcu.table_schema = tc.table_schema";
+        $query .= " and kcu.table_name = tc.table_name";
+        $query .= " where tc.constraint_type = 'PRAIMRY KEY'";
+        $query .= " and kcu.table_schema = ? and kcu.table_name = ?";
+        $query .= " order by kcu.ordinal_position";
+        $values = array( $this->getName(), $relationName );
+        
+        // build SchemaAttribute instances describing the columns
+        $results = array();
+        foreach( $this->query( $query, $values ) as $record )
+        {
+            $name = $record['name'];
+            $dataType = $this->mapDataType( "null" );
+            $results[] = new SchemaAttribute( $this, $relationName, $name, $dataType );
+        }
+        
+        // return the attributes
+        return $results;
     }
     
     public function getRelationships( $relationName )

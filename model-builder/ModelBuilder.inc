@@ -49,16 +49,25 @@ class ModelBuilder
      */
     public function addRelation( SchemaRelation $relation )
     {
+        // create abstract base class
         $className = ucfirst( Orm::formatLogicalName( $relation ) ) . "Model";
         $baseClassName = $className . "Base";
-        
         $baseClass = $this->createClass( $baseClassName )->extend( "OrmModel" )->setAbstract( true );
+        
+        // add attribute properties to the base class
         foreach( $relation->getAttributes() as $attribute )
         {
             $this->addAttribute( $attribute, $baseClassName );
         }
         
-        $class = $this->createClass( $className )->extend( $baseClassName );
+        // add metadata describing which attributes are part of the key
+        $keyNames = array_map( function(SchemaAttribute $attribute) {
+            return $attribute->getName();
+        }, $relation->getKeyAttributes() );
+        $baseClass->setMetadata( "key", $keyNames );
+
+        // create stubbed user class
+        $this->createClass( $className )->extend( $baseClassName );
     }
     
     /**
