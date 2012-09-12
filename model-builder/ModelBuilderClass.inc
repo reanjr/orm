@@ -45,6 +45,7 @@ class ModelBuilderClass
     public function setAbstract( $value )
     {
         $this->isAbstract = (bool)$value;
+        return $this;
     }
     
     /**
