@@ -1,10 +1,9 @@
-
 <?php
 /**
  * Copyright Skinit, Inc.
  */
 
-class Filter implements IFilterable
+class Filter
 {
     const OP_DEFAULT = " AND ";
     const OP_ALL = " AND ";
@@ -47,20 +46,20 @@ class Filter implements IFilterable
     }
     
     /**
-     * Create a new filter with one or more tests.  Any number of tests may be provided.  See the Filter constructor for
-     * more information on providing tests.
+     * Create a new proxy filter and set the target IFilterable for the filter.  A proxy filter can be used by an
+     * IFilterable instance to provided better support for filter chaining.  The proxy filter provides not only methods
+     * to modify the filter instance, but also to add additional filters to the proxy filter target object.
      * 
-     * @param   mixed   $test_1
-     * @return  Filter
+     * @param   IFilterable $target
+     * @return  ProxyFilter
      */
-    public static function create( $test_1 )
+    public static function createProxy( IFilterable $target )
     {
-        return new Filter( func_get_args() );
+        return new ProxyFilter( $target );
     }
     
     /**
-     * Add tests to this filter.  The arguments are the same as for the create method or the constructor, but the tests
-     * are added to the existing filter, rather than a new instance.  Return this instance for chaining.
+     * Add tests to this filter.  The arguments are the same as for the constructor.  Return this instance for chaining.
      * 
      * @param   mixed   $test_1
      * @return  Filter
@@ -167,21 +166,6 @@ class Filter implements IFilterable
     public function addConditions( array $conditions )
     {
         $this->conditions = array_merge( $this->conditions, $conditions );
-    }
-    
-    
-    /**************************************************************************
-     * IFilterable implementation
-     **************************************************************************/
-    
-    public function filter( $condition_1 )
-    {
-        $this->addTests( func_get_args() );
-    }
-    
-    public function filterOut( $condition_1 )
-    {
-        $this->addTests( Filter::create( func_get_args() )->invert() );
     }
     
 }
