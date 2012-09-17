@@ -30,6 +30,16 @@ class Condition
     }
     
     /**
+     * Return the name for this condition.  This is the tuple value to be filtered by the condition.
+     * 
+     * @return  string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+    
+    /**
      * Set the name for the condition.  This is the tuple value to be filtered by the condition.  The name may be set
      * to null as long it is used in a filter as a named condition.  Return this instance for chaining.
      * 
@@ -43,6 +53,16 @@ class Condition
     }
     
     /**
+     * Return the value for the condition.  This is the value against which the tuple value is compares.
+     * 
+     * @return  mixed
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
+    
+    /**
      * Set the value for the condition.  This is the value against which the tuple value is compared.  Setting the
      * value to null will test specifically for null values.  Return this instance for chaining.
      * 
@@ -53,6 +73,16 @@ class Condition
     {
         $this->value = is_object($value) ? (string)$value : $value;
         return $this;
+    }
+    
+    /**
+     * Return the operator used to compare the tuple value with the condition value.
+     * 
+     * @return  string
+     */
+    public function getOp()
+    {
+        return $this->op;
     }
     
     /**
