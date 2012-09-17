@@ -12,9 +12,9 @@ interface IEnumerableDataStore
     /**
      * Return an iterator that can provide access to all records for a relation.
      * 
-     * @param   string      $relation
+     * @param   string      $relationName
      * @return  Iterator
      */
-    function findAll( $relation );
+    function findAll( $relationName );
     
 }
