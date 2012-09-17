@@ -201,4 +201,83 @@ class ModelBuilder
         throw new Exception( "could not find '$templateName' template" );
     }
     
+    /**
+     * Format the value as PHP and return the result.  If the value is an array, numeric indexes will be lost.  If
+     * a particular numeric index is required, it can be passed as a string, though this will be reflected in the
+     * generated code.  Objects are unsupported and will be cast to strings.
+     * 
+     * If the data type variable is provided, it will be set to the PHP data type for the processed literal.
+     * 
+     * @param   mixed   $value
+     * @param   string  $dataType
+     * @return  string
+     */
+    public static function formatPhpLiteral( $value, &$dataType = null )
+    {
+        // if we have an array, process it recursively and wrap it in array( ... )
+        if( is_array($value) )
+        {
+            $dataType = "array";
+            $formattedValues = array();
+            foreach( $value as $key => $item )
+            {
+                // if we don't have a numeric key, we want to add the key to the formatted value
+                if( !is_int($key) )
+                {
+                    $formattedValues[] = self::formatPhpStringLiteral($key) . "=>" . self::formatPhpValue( $item );
+                }
+                
+                // otherwise, we'll just put the value in there as is
+                else
+                {
+                    $formattedValues[] = self::formatPhpLiteral( $item );
+                }
+            }
+            return "array(" . implode(",", $formattedValues) . ")";
+        }
+        
+        // if we have a bool, generate a "true" or "false" keyword
+        if( is_bool($value) )
+        {
+            $dataType = "bool";
+            return is_null($value) ? "null" : ($value ? "true" : "false");
+        }
+        
+        // if we have a null, generate a "null" keyword
+        if( is_null($value) )
+        {
+            $dataType = null;
+            return is_null($value) ? "null" : ($value ? "true" : "false");
+        }
+        
+        // if we have a float, convert to a string to generate a PHP expression
+        if( is_float($value) )
+        {
+            $dataType = "float";
+            return (string)$value;
+        }
+        
+        // if we have an int, convert to a string to generate a PHP expression
+        if( is_int($value) )
+        {
+            $dataType = "int";
+            return (string)$value;
+        }
+        
+        // otherwise, just format as a string
+        $dataType = "string";
+        return self::formatPhpStringLiteral( $value );
+    }
+    
+    /**
+     * Format the value as a PHP string literal.
+     * 
+     * @param   mixed   $value
+     * @return  string
+     */
+    public static function formatPhpStringLiteral( $value )
+    {
+        return "'" . str_replace( "'", "\'", (string)$value ) . "'";
+    }
+    
 }

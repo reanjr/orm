@@ -167,27 +167,7 @@ class ModelBuilderClass
         $replace['physical_name'] = Orm::formatPhysicalName( $name );
         
         // format the literal value
-        switch( gettype($literal) )
-        {
-            case "string":
-                $replace["LITERAL"] = '"' . str_replace( '"', '\"', $literal ) . '"';
-                $dataType = $dataType ?: "string";
-                break;
-            case "integer":
-                $replace["LITERAL"] = (string)$literal;
-                $dataType = $dataType ?: "int";
-                break;
-            case "double":
-                $replace["LITERAL"] = (string)$literal;
-                $dataType = $dataType ?: "float";
-                break;
-            case "boolean":
-                $replace["LITERAL"] = $literal ? "true" : "false";
-                $dataType = $dataType ?: "bool";
-                break;
-            default:
-                $replace["LITERAL"] = "null";
-        }
+        $replace["LITERAL"] = ModelBuilder::formatPhpLiteral( $literal, $dataType );
         
         // if the object has a data type, set up the replacement
         if( $dataType )
@@ -195,6 +175,12 @@ class ModelBuilderClass
             $replace['object'] = $dataType;
             $replace["(object)"] = in_array( $dataType, array("int", "string", "bool", "array") ) ? "($dataType)" : "";
             $replace["object"] = $dataType;
+        }
+        
+        // otherwise, make sure we fix any errant casts to null
+        else
+        {
+            $replace["(object)"] = "";
         }
         
         // get template and make replacements
