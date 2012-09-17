@@ -4,9 +4,9 @@
  */
 
 /**
- * Interface for a data store supporting keyless access to the all contained data.
+ * Interface for a data store supporting enumeration of all contained data.
  */
-interface IKeylessAccess
+interface IEnumerableDataStore
 {
     
     /**
