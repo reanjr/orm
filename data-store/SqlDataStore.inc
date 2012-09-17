@@ -3,7 +3,7 @@
  * Copyright Skinit, Inc.
  */
 
-abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISchematic
+abstract class SqlDataStore extends OrmDataStore implements ISchematic, IEnumerableDataStore, ISearchableDataStore
 {
     
     /**
@@ -69,6 +69,17 @@ abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISch
         }
         return $result;
     }
+    
+    /**
+     * Escape the identifier for direct SQL injection.
+     * 
+     * @param   string  $identifier
+     * @return  string
+     */
+    protected function escapeIdentifier( $identifier )
+    {
+        return '"' . str_replace( '"', '\"', $identifier ) . '"';
+    }
 
     /**************************************************************************
      * OrmDataStore implementation
@@ -76,28 +87,19 @@ abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISch
     
     public function fetch( $relation, $key )
     {
-        $query = "select * from \"$relation\"";
+        $relation = $this->escapeIdentifier( $relation );
+        $query = "select * from $relation";
         $filter = array();
         $values = array();
         foreach( $key as $name => $value )
         {
-            $filter[] = "\"$name\" = ?";
+            $filter[] = $this->escapeIdentifier( $name ) . " = ?";
             $values[] = $value;
         }
         $query .= $filter
           ? " where " . implode( " and ", $filter )
           : "";
         return $this->queryOne( $query, $values );
-    }
-    
-    /**************************************************************************
-     * IKeylessAccess implementation
-     **************************************************************************/
-
-    public function findAll( $relation )
-    {
-        $query = "select * from \"$relation\"";
-        return $this->query( $query, array() );
     }
     
     /**************************************************************************
@@ -133,8 +135,8 @@ abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISch
         $results = array();
         foreach( $this->query( $query, $values ) as $record )
         {
-            $name = $record['name'];
-            $dataType = $this->mapDataType( $record['data_type'] );
+            $name = $record["name"];
+            $dataType = $this->mapDataType( $record["data_type"] );
             $results[] = new SchemaAttribute( $this, $relationName, $name, $dataType );
         }
 
@@ -161,7 +163,7 @@ abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISch
         $results = array();
         foreach( $this->query( $query, $values ) as $record )
         {
-            $name = $record['name'];
+            $name = $record["name"];
             $dataType = $this->mapDataType( "null" );
             $results[] = new SchemaAttribute( $this, $relationName, $name, $dataType );
         }
@@ -186,7 +188,7 @@ abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISch
         foreach( $this->query( $query, $values ) as $record )
         {
             // if we are at ordinal position 0, we have a new relationship
-            $ordinal = $record['ordinal_position'];
+            $ordinal = $record["ordinal_position"];
             if( $ordinal == 0 )
             {
                 // before we move to the new relationship, generate the previous one
@@ -199,14 +201,14 @@ abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISch
                     $toKey = array();
                 }
                 
-                $attributeName = $record['column_name'];
+                $attributeName = $record["column_name"];
                 $matches = array_filter( $this->getRelationAttributes( $relationName ), function($attribute) use($attributeName) {
                     return $attribute->getName() == $attributeName;
                 } );
                 $fromKey[] = array_shift( $matches );
                 
-                $referencedRelation = $record['referenced_table_name'];
-                $attributeName = $record['referenced_column_name'];
+                $referencedRelation = $record["referenced_table_name"];
+                $attributeName = $record["referenced_column_name"];
                 $matches = array_filter( $this->getRelationAttributes( $referencedRelation ), function($attribute) use($attributeName) {
                     return $attribute->getName() == $attributeName;
                 } );
@@ -224,6 +226,83 @@ abstract class SqlDataStore extends OrmDataStore implements IKeylessAccess, ISch
                 
         // return the relationship
         return $results;
+    }
+    
+    /**************************************************************************
+     * IEnumerableDataStore implementation
+     **************************************************************************/
+
+    public function findAll( $relationName )
+    {
+        $relationName = $this->escapeIdentifier( $relationName );
+        $query = "select * from $relationName";
+        return $this->query( $query, array() );
+    }
+    
+    /**************************************************************************
+     * ISearchableDataStore implementation
+     **************************************************************************/
+    
+    public function generateFindQuery( $relationName, Filter $filter_1 )
+    {
+        // grab all filter arguments
+        $args = func_get_args();
+        array_shift( $args );
+        $filters = $args;
+        
+        // setup query data we'll use during filter parsing
+        $relationName = $this->escapeIdentifier( $relationName );
+        $query = "select * from $relationName";
+        $data = array(
+            "query" => $query,
+            "data_store" => $this,
+            "parameters" => array(),
+        );
+        
+        // setup parser and use it to add the where clause to the query
+        $parser = FilterParser::create( $filters )
+            ->setData( $data )
+            ->setEventHandler( FilterParser::EVENT_BEGIN, function($event, &$data) { $data["query"] .= " where "; } )
+            ->setEventHandler( FilterParser::EVENT_CONJUNCTION, function($event, &$data) { $data["query"] .= " and "; } )
+            ->setEventHandler( FilterParser::EVENT_DISJUNCTION, function($event, &$data) { $data["query"] .= " or "; } )
+            ->setEventHandler( FilterParser::EVENT_GROUP, function($event, &$data) { $data["query"] .= " ("; } )
+            ->setEventHandler( FilterParser::EVENT_UNGROUP, function($event, &$data) { $data["query"] .= ")"; } )
+            ->setEventHandler( FilterParser::EVENT_INVERSION, function($event, &$data) { $data["query"] .= " not "; } )
+            ->setEventHandler( FilterParser::EVENT_COMPARISON, function($event, &$data, $attribute, $value, $operator ) {
+                // if we are comparing to null, we only support equality
+                if( is_null($value) && $operator != FilterParser::COMPARE_EQUALS )
+                {
+                    throw new OrmFilterParseException( "comparing '$attribute' to null requires equality operator" );
+                }
+
+                // escape the attribute name
+                $attribute = $dataStore->escapeIdentifier( $attribute );
+
+                // IS NULL comparison is handled a bit different
+                if( is_null($value) )
+                {
+                    $expression = "$attribute is null";
+                    $data["query"] .= $expression;
+                }
+
+                // for anything else, assume we've got an explicit binary operator
+                else
+                {
+                    $expression = "$attribute $operator ?";
+                    $data["query"] .= $expression;
+                    $data["parameters"][] = $value;
+                }
+            } );
+        $parser->parse();
+        
+        // execute
+        return array( $data["query"], $data["parameters"] );
+    }
+    
+    public function find( $relationName, Filter $filter_1 )
+    {
+        $query = call_user_func_array( array($this, "generateQueryForFind"), func_get_args() );
+        return $this->query( $query[0], $query[1] );
     }
         
 }
