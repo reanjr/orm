@@ -37,8 +37,8 @@ interface ISchematic
     function getRelationAttributes( $relationName );
     
     /**
-     * Return a list of the key attributes (PK columns in SQL) for the provided relation as an array of SchemaAttribute
-     * instances.
+     * Return a list of the key attribute tuples (primary and unique keys in SQL) for the provided relation.  The
+     * attribute 
      * 
      * @return  array
      */
