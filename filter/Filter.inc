@@ -11,7 +11,7 @@ class Filter
     
     protected $inverted = false;
     protected $conditions = array();
-    protected $invertFlags = array();
+    protected $filters = array();
     protected $op = Filter::OP_DEFAULT;
     
     /**
@@ -71,7 +71,7 @@ class Filter
         // if called in single condition form, strip the arguments and set a condition
         if( count($args) == 2 && is_string( $args[0] ) )
         {
-            $this->appendCondition( ($args[1] instanceof Condition)
+            $this->addCondition( ($args[1] instanceof Condition)
               ? $args[1]->setName($args[0])
               : new Condition( $args[0], $args[1] ) );
             $args = array();
@@ -146,6 +146,16 @@ class Filter
     }
     
     /**
+     * Return true if the filter is currently inverted.  Otherwise, return false.
+     * 
+     * @return  bool
+     */
+    public function inverted()
+    {
+        return $this->inverted;
+    }
+    
+    /**
      * Add a condition to the current set of conditions.  Return this instance for chaining.
      * 
      * @param   Condition   $condition
@@ -166,6 +176,107 @@ class Filter
     public function addConditions( array $conditions )
     {
         $this->conditions = array_merge( $this->conditions, $conditions );
+    }
+    
+    /**
+     * Return list of conditions defined for this filter.
+     * 
+     * @return  array
+     */
+    public function getConditions()
+    {
+        return $this->conditions;
+    }
+    
+    /**
+     * Add a sub-filter to the current filter.  Return this instance for chaining.
+     * 
+     * @param   Filter  $filter
+     * @return  Filter
+     */
+    public function addFilter( Filter $filter )
+    {
+        $this->filters[] = $filter;
+        return $this;
+    }
+    
+    /**
+     * Add an array of sub-filters to the current filter.  Return this instance for chaining.
+     * 
+     * @param   array   $filters
+     * @return  Filter
+     */
+    public function addFilters( array $filters )
+    {
+        $this->filters = array_merge( $this->filters, $filters );
+    }
+    
+    /**
+     * Return list of sub-filters defined for this filter.
+     * 
+     * @return  array
+     */
+    public function getFilters()
+    {
+        return $this->filters;
+    }
+    
+    /**
+     * Use the provided parser to generate parse events for this filter.
+     * 
+     * @param   FilterParser    $parser
+     */
+    public function parse( FilterParser $parser )
+    {
+        // handle inversion if we have one
+        if( $this->inverted() )
+        {
+            $parser->triggerEvent( FilterParser::EVENT_INVERSION );
+        }
+        
+        // group filter tests
+        $parser->triggerEvent( FilterParser::EVENT_GROUP );
+        
+        $tests = array_merge( $this->getConditions(), $this->getFilters() );
+        while( $test = array_shift( $tests ) )
+        {
+            // add a comparison event for conditions
+            if( $test instanceof Condition )
+            {
+                $parser->triggerEvent( FilterParser::EVENT_COMPARISON, $test->getName(), $test->getValue(), $test->getOp() );
+            }
+            
+            // pass along control for sub filters
+            elseif( $test instanceof Filter )
+            {
+                $test->parse( $parser );
+            }
+            
+            // anything else is a problem
+            else
+            {
+                throw new OrmFilterParseException( "tests must be Condition or Filter instances" );
+            }
+            
+            // add a combinator if there are more tests
+            if( $tests )
+            {
+                switch( $this->op )
+                {
+                    case self::OP_ALL:
+                        $parser->triggerEvent( FilterParser::EVENT_CONJUNCTION );
+                        break;
+                    case self::OP_ANY:
+                        $parser->triggerEvent( FilterParser::EVENT_DISJUNCTION );
+                        break;
+                    default:
+                        throw new OrmFilterParseException( "unknown filter op '$op'" );
+                }
+            }
+        }
+        
+        // close filter tests group
+        $parser->triggerEvent( FilterParser::EVENT_UNGROUP );
     }
     
 }
