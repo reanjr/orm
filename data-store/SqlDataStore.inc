@@ -304,5 +304,10 @@ abstract class SqlDataStore extends OrmDataStore implements ISchematic, IEnumera
         $query = call_user_func_array( array($this, "generateQueryForFind"), func_get_args() );
         return $this->query( $query[0], $query[1] );
     }
+
+    public function findOne( $relationName, Filter $filter_1 )
+    {
+        return current( call_user_func_array( [$this, "find"], func_get_args() ) );
+    }
         
 }
